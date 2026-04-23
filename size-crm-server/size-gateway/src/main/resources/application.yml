@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: size-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        import-check:
+          enabled: false
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # 认证中心路由
+        - id: size-auth
+          uri: lb://size-auth
+          predicates:
+            - Path=/auth/**
+        
+        # 系统模块路由
+        - id: size-system
+          uri: lb://size-system
+          predicates:
+            - Path=/system/**
+            
+        # CRM 模块路由
+        - id: size-crm-biz
+          uri: lb://size-crm-biz
+          predicates:
+            - Path=/crm/**
+
+        # 工作流模块路由
+        - id: size-workflow
+          uri: lb://size-workflow
+          predicates:
+            - Path=/workflow/**

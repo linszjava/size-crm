@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="contract-audit" name="合同审批流程" isExecutable="true">
+
+        <!-- 开始节点 -->
+        <startEvent id="startEvent" name="开始审批" flowable:initiator="initiator" />
+
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="salesManagerAudit" />
+
+        <!-- 节点1：销售总监审批 -->
+        <userTask id="salesManagerAudit" name="销售总监审批" flowable:candidateGroups="ROLE_SALES_MANAGER" />
+
+        <sequenceFlow id="flow2" sourceRef="salesManagerAudit" targetRef="financeAudit">
+            <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <![CDATA[${approved == true}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow_reject1" sourceRef="salesManagerAudit" targetRef="endEventReject">
+            <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <![CDATA[${approved == false}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <!-- 节点2：财务专员审批 -->
+        <userTask id="financeAudit" name="财务专员审批" flowable:candidateGroups="ROLE_FINANCE" />
+
+        <sequenceFlow id="flow3" sourceRef="financeAudit" targetRef="endEventPass">
+            <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <![CDATA[${approved == true}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow_reject2" sourceRef="financeAudit" targetRef="endEventReject">
+            <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <![CDATA[${approved == false}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <!-- 结束节点 (通过) -->
+        <endEvent id="endEventPass" name="审批通过" />
+
+        <!-- 结束节点 (驳回) -->
+        <endEvent id="endEventReject" name="审批驳回" />
+
+    </process>
+
+</definitions>
