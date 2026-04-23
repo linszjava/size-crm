@@ -22,6 +22,15 @@ const workflow: AppRouteModule = {
       },
       component: () => import('/@/views/workflow/task/index.vue'),
     },
+    {
+      path: 'definition',
+      name: 'WorkflowDefinition',
+      meta: {
+        title: '流程定义',
+        ignoreKeepAlive: false,
+      },
+      component: () => import('/@/views/workflow/definition/index.vue'),
+    },
   ],
 };
 

@@ -1,17 +1,9 @@
-import { getThemeColors, generateColors } from '../../../build/config/themeConfig';
-
-import { replaceStyleVariables } from 'vite-plugin-theme/es/client';
-import { mixLighten, mixDarken, tinycolor } from 'vite-plugin-theme/es/colorUtils';
+import { getThemeColors } from '../../../build/config/themeConfig';
 
 export async function changeTheme(color: string) {
-  const colors = generateColors({
-    mixDarken,
-    mixLighten,
-    tinycolor,
-    color,
-  });
-
-  return await replaceStyleVariables({
-    colorVariables: [...getThemeColors(color), ...colors],
-  });
+  // Vite 8 cleanup mode:
+  // vite-plugin-theme is removed, keep API compatible and switch by CSS var only.
+  const html = document.documentElement;
+  html.style.setProperty('--primary-color', getThemeColors(color)[0] || color);
+  return Promise.resolve();
 }

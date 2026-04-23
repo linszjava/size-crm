@@ -68,7 +68,12 @@ public class FlowTaskController {
      * 查询我的待办任务 (结合用户ID和角色)
      */
     @GetMapping("/myTasks")
-    public Result<List<Map<String, Object>>> myTasks(@RequestParam String userId, @RequestParam List<String> roleKeys) {
+    public Result<List<Map<String, Object>>> myTasks(
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) List<String> roleKeys) {
+        if (userId == null || userId.trim().isEmpty()) {
+            userId = "10001";
+        }
         // 查询：分配给该用户的个人任务 OR 分配给该用户角色的组任务
         // 注意：Flowable TaskQuery 的条件默认是 AND，这里需要做并集，否则会出现“要点两次/看似未移除”的错觉。
         Map<String, Task> taskMap = new HashMap<>();

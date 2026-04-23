@@ -12,7 +12,7 @@ import { loadLocalePool, setHtmlPageLang } from './helper';
 
 interface LangModule {
   message: Recordable;
-  momentLocale: Recordable;
+  momentLocale: Nullable<Recordable>;
   momentLocaleName: string;
 }
 
@@ -56,7 +56,10 @@ export function useLocale() {
     const { message, momentLocale, momentLocaleName } = langModule;
 
     globalI18n.setLocaleMessage(locale, message);
-    moment.updateLocale(momentLocaleName, momentLocale);
+    if (momentLocale) {
+      moment.updateLocale(momentLocaleName, momentLocale);
+    }
+    moment.locale(momentLocaleName);
     loadLocalePool.push(locale);
 
     setI18nLanguage(locale);
