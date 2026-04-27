@@ -8,7 +8,7 @@
   import { BasicModal, useModalInner } from '/@/components/Modal';
   import { BasicForm, useForm } from '/@/components/Form/index';
   import { formSchema } from './role.data';
-  import { saveRole, updateRole } from '/@/api/system/role';
+  import { getRole, saveRole, updateRole } from '/@/api/system/role';
 
   export default defineComponent({
     name: 'RoleModal',
@@ -32,8 +32,10 @@
 
         if (unref(isUpdate)) {
           rowId.value = data.record.id;
+          const detail = await getRole(rowId.value);
           setFieldsValue({
             ...data.record,
+            ...detail,
           });
         }
       });

@@ -1,5 +1,8 @@
 <template>
   <BasicModal v-bind="$attrs" @register="registerModal" :title="getTitle" @ok="handleSubmit">
+    <div class="mb-3" v-if="!isUpdate">
+      <a-button type="default" @click="handleSaveDraft" :loading="draftLoading">保存草稿</a-button>
+    </div>
     <BasicForm @register="registerForm" />
   </BasicModal>
 </template>
@@ -8,7 +11,8 @@
   import { BasicModal, useModalInner } from '/@/components/Modal';
   import { BasicForm, useForm } from '/@/components/Form/index';
   import { formSchema } from './contract.data';
-  import { saveContract, updateContract } from '/@/api/crm/contract';
+  import { saveContract, saveContractDraft, updateContract } from '/@/api/crm/contract';
+  import { useMessage } from '/@/hooks/web/useMessage';
 
   export default defineComponent({
     name: 'ContractModal',
@@ -17,8 +21,10 @@
     setup(_, { emit }) {
       const isUpdate = ref(true);
       const rowId = ref('');
+      const draftLoading = ref(false);
+      const { createMessage } = useMessage();
 
-      const [registerForm, { setFieldsValue, resetFields, validate }] = useForm({
+      const [registerForm, { setFieldsValue, resetFields, validate, getFieldsValue }] = useForm({
         labelWidth: 100,
         baseColProps: { span: 24 },
         schemas: formSchema,
@@ -40,6 +46,19 @@
 
       const getTitle = computed(() => (!unref(isUpdate) ? '新增合同' : '编辑合同'));
 
+      async function handleSaveDraft() {
+        try {
+          draftLoading.value = true;
+          const values = getFieldsValue();
+          await saveContractDraft(values);
+          createMessage.success('草稿已保存');
+          closeModal();
+          emit('success');
+        } finally {
+          draftLoading.value = false;
+        }
+      }
+
       async function handleSubmit() {
         try {
           const values = await validate();
@@ -56,7 +75,7 @@
         }
       }
 
-      return { registerModal, registerForm, getTitle, handleSubmit };
+      return { registerModal, registerForm, getTitle, handleSubmit, handleSaveDraft, isUpdate, draftLoading };
     },
   });
 </script>

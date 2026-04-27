@@ -11,6 +11,10 @@ export const getContract = (id: string) =>
 export const saveContract = (data: any) =>
   defHttp.post({ url: API_BASE, data });
 
+// 保存草稿（允许部分字段为空）
+export const saveContractDraft = (data: any) =>
+  defHttp.post({ url: `${API_BASE}/draft`, data });
+
 export const updateContract = (data: any) =>
   defHttp.put({ url: API_BASE, data });
 

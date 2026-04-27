@@ -8,7 +8,7 @@
   import { BasicModal, useModalInner } from '/@/components/Modal';
   import { BasicForm, useForm } from '/@/components/Form/index';
   import { formSchema } from './user.data';
-  import { saveUser, updateUser } from '/@/api/system/user';
+  import { getUser, saveUser, updateUser } from '/@/api/system/user';
 
   export default defineComponent({
     name: 'UserModal',
@@ -32,8 +32,11 @@
 
         if (unref(isUpdate)) {
           rowId.value = data.record.id;
+          const detail = await getUser(rowId.value);
           setFieldsValue({
             ...data.record,
+            ...detail,
+            roleIds: (detail?.roleIds || []).map((id) => String(id)),
           });
         }
       });
@@ -43,11 +46,15 @@
       async function handleSubmit() {
         try {
           const values = await validate();
+          const payload = {
+            ...values,
+            roleIds: (values.roleIds || []).map((id: string | number) => Number(id)),
+          };
           setModalProps({ confirmLoading: true });
           if (unref(isUpdate)) {
-             await updateUser(values);
+             await updateUser(payload);
           } else {
-             await saveUser(values);
+             await saveUser(payload);
           }
           closeModal();
           emit('success');

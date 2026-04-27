@@ -1,5 +1,6 @@
 package com.size.system.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.size.common.core.domain.Result;
 import com.size.system.domain.SysMenu;
@@ -22,6 +23,7 @@ public class SysMenuController {
     /**
      * 获取菜单列表
      */
+    @SaCheckPermission("system:menu:query")
     @GetMapping("/list")
     public Result<List<SysMenu>> list(
             @RequestParam(required = false) String menuName,
@@ -39,6 +41,7 @@ public class SysMenuController {
     /**
      * 获取菜单详细信息
      */
+    @SaCheckPermission("system:menu:query")
     @GetMapping("/{id}")
     public Result<SysMenu> getInfo(@PathVariable Long id) {
         return Result.ok(menuService.getById(id));
@@ -47,25 +50,43 @@ public class SysMenuController {
     /**
      * 新增菜单
      */
+    @SaCheckPermission("system:menu:add")
     @PostMapping
     public Result<Boolean> add(@RequestBody SysMenu menu) {
-        return Result.ok(menuService.save(menu));
+        try {
+            menuService.validateMenu(menu, false);
+            return Result.ok(menuService.save(menu));
+        } catch (IllegalArgumentException e) {
+            return Result.fail(e.getMessage());
+        }
     }
 
     /**
      * 修改菜单
      */
+    @SaCheckPermission("system:menu:edit")
     @PutMapping
     public Result<Boolean> edit(@RequestBody SysMenu menu) {
-        return Result.ok(menuService.updateById(menu));
+        try {
+            menuService.validateMenu(menu, true);
+            return Result.ok(menuService.updateById(menu));
+        } catch (IllegalArgumentException e) {
+            return Result.fail(e.getMessage());
+        }
     }
 
     /**
      * 删除菜单
      */
+    @SaCheckPermission("system:menu:delete")
     @DeleteMapping("/{id}")
     public Result<Boolean> remove(@PathVariable Long id) {
-        // TODO: Validate if there are child menus before deleting
+        if (menuService.hasChildren(id)) {
+            return Result.fail("存在子菜单，无法删除");
+        }
+        if (menuService.isMenuAssignedToRole(id)) {
+            return Result.fail("菜单已分配给角色，无法删除");
+        }
         return Result.ok(menuService.removeById(id));
     }
 }

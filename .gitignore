@@ -1,0 +1,54 @@
+# =========================================
+# Root .gitignore for size-crm monorepo
+# (frontend: Vue/Vite, backend: Java/Spring Boot, IDE: IntelliJ)
+# =========================================
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- IDE / Editor ----
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ---- Frontend (Node) ----
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.cache/
+**/.vite/
+**/.eslintcache
+**/.local/
+
+# Env files (keep templates in repo if any)
+**/.env
+**/.env.*
+!**/.env.example
+
+# ---- Backend (Java/Maven/Gradle) ----
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+**/.gradle/
+**/build/
+
+# ---- Test artifacts / uploads ----
+**/tests/server/static/
+**/tests/server/static/upload/
+**/uploads/
+
+# ---- Misc ----
+*.swp
+*.swo
+*.tmp
+

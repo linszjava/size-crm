@@ -18,14 +18,6 @@
           class="fix-auto-fill"
         />
       </FormItem>
-      <FormItem name="sms" class="enter-x">
-        <CountdownInput
-          size="large"
-          class="fix-auto-fill"
-          v-model:value="formData.sms"
-          :placeholder="t('sys.login.smsCode')"
-        />
-      </FormItem>
       <FormItem name="password" class="enter-x">
         <StrengthMeter
           size="large"
@@ -70,14 +62,16 @@
   import LoginFormTitle from './LoginFormTitle.vue';
   import { Form, Input, Button, Checkbox } from 'ant-design-vue';
   import { StrengthMeter } from '/@/components/StrengthMeter';
-  import { CountdownInput } from '/@/components/CountDown';
   import { useI18n } from '/@/hooks/web/useI18n';
+  import { useMessage } from '/@/hooks/web/useMessage';
+  import { registerApi } from '/@/api/sys/user';
   import { useLoginState, useFormRules, useFormValid, LoginStateEnum } from './useLogin';
 
   const FormItem = Form.Item;
   const InputPassword = Input.Password;
   const { t } = useI18n();
   const { handleBackLogin, getLoginState } = useLoginState();
+  const { createMessage } = useMessage();
 
   const formRef = ref();
   const loading = ref(false);
@@ -87,7 +81,6 @@
     password: '',
     confirmPassword: '',
     mobile: '',
-    sms: '',
     policy: false,
   });
 
@@ -99,6 +92,17 @@
   async function handleRegister() {
     const data = await validForm();
     if (!data) return;
-    console.log(data);
+    try {
+      loading.value = true;
+      await registerApi({
+        username: data.account,
+        mobile: data.mobile,
+        password: data.password,
+      });
+      createMessage.success('注册成功，请返回登录');
+      handleBackLogin();
+    } finally {
+      loading.value = false;
+    }
   }
 </script>

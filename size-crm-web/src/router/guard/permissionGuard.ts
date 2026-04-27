@@ -93,8 +93,12 @@ export function createPermissionGuard(router: Router) {
     }
 
     if (permissionStore.getIsDynamicAddedRoute) {
-      next();
-      return;
+      // 已有缓存路由但命中 404，可能是权限变更或缓存脏数据，强制重建一次动态路由
+      if (to.name !== PAGE_NOT_FOUND_ROUTE.name) {
+        next();
+        return;
+      }
+      permissionStore.setDynamicAddedRoute(false);
     }
 
     const routes = await permissionStore.buildRoutesAction();

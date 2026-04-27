@@ -25,6 +25,19 @@ export const columns: BasicColumn[] = [
     width: 180,
   },
   {
+    title: '菜单类型',
+    dataIndex: 'menuType',
+    width: 100,
+    customRender: ({ record }) => {
+      const typeMap: Record<string, string> = {
+        M: '目录',
+        C: '菜单',
+        F: '按钮',
+      };
+      return typeMap[record.menuType] || '-';
+    },
+  },
+  {
     title: '组件路径',
     dataIndex: 'component',
     width: 180,
@@ -85,6 +98,20 @@ export const formSchema: FormSchema[] = [
     required: true,
   },
   {
+    field: 'menuType',
+    label: '菜单类型',
+    component: 'RadioButtonGroup',
+    defaultValue: 'C',
+    required: true,
+    componentProps: {
+      options: [
+        { label: '目录', value: 'M' },
+        { label: '菜单', value: 'C' },
+        { label: '按钮', value: 'F' },
+      ],
+    },
+  },
+  {
     field: 'orderNum',
     label: '显示排序',
     component: 'InputNumber',
@@ -99,17 +126,34 @@ export const formSchema: FormSchema[] = [
     field: 'path',
     label: '路由地址',
     component: 'Input',
+    ifShow: ({ values }) => values.menuType !== 'F',
     required: true,
   },
   {
     field: 'component',
     label: '组件路径',
     component: 'Input',
+    ifShow: ({ values }) => values.menuType === 'C',
+    required: true,
   },
   {
     field: 'perms',
     label: '权限字符',
     component: 'Input',
+    ifShow: ({ values }) => values.menuType === 'F',
+    required: true,
+  },
+  {
+    field: 'visible',
+    label: '显示状态',
+    component: 'RadioButtonGroup',
+    defaultValue: 1,
+    componentProps: {
+      options: [
+        { label: '显示', value: 1 },
+        { label: '隐藏', value: 0 },
+      ],
+    },
   },
   {
     field: 'status',

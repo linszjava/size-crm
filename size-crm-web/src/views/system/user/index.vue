@@ -2,26 +2,10 @@
   <div>
     <BasicTable @register="registerTable">
       <template #toolbar>
-        <a-button type="primary" @click="handleCreate">新增用户</a-button>
+        <a-button v-auth="'system:user:add'" type="primary" @click="handleCreate">新增用户</a-button>
       </template>
       <template #action="{ record }">
-        <TableAction
-          :actions="[
-            {
-              icon: 'clarity:note-edit-line',
-              onClick: handleEdit.bind(null, record),
-            },
-            {
-              icon: 'ant-design:delete-outlined',
-              color: 'error',
-              popConfirm: {
-                title: '是否确认删除',
-                placement: 'left',
-                confirm: handleDelete.bind(null, record),
-              },
-            },
-          ]"
-        />
+        <TableAction :actions="getTableActions(record)" />
       </template>
     </BasicTable>
     <UserModal @register="registerModal" @success="handleSuccess" />
@@ -34,12 +18,14 @@
   import { useModal } from '/@/components/Modal';
   import UserModal from './UserModal.vue';
   import { columns, searchFormSchema } from './user.data';
+  import { usePermission } from '/@/hooks/web/usePermission';
 
   export default defineComponent({
     name: 'UserManagement',
     components: { BasicTable, UserModal, TableAction },
     setup() {
       const [registerModal, { openModal }] = useModal();
+      const { hasPermission } = usePermission();
       const [registerTable, { reload }] = useTable({
         title: '用户列表',
         api: getUserPage,
@@ -86,6 +72,28 @@
         reload();
       }
 
+      function getTableActions(record: Recordable) {
+        const actions: Recordable[] = [];
+        if (hasPermission('system:user:edit')) {
+          actions.push({
+            icon: 'clarity:note-edit-line',
+            onClick: handleEdit.bind(null, record),
+          });
+        }
+        if (hasPermission('system:user:delete')) {
+          actions.push({
+            icon: 'ant-design:delete-outlined',
+            color: 'error',
+            popConfirm: {
+              title: '是否确认删除',
+              placement: 'left',
+              confirm: handleDelete.bind(null, record),
+            },
+          });
+        }
+        return actions;
+      }
+
       function handleSuccess() {
         reload();
       }
@@ -96,6 +104,7 @@
         handleCreate,
         handleEdit,
         handleDelete,
+        getTableActions,
         handleSuccess,
       };
     },

@@ -1,6 +1,8 @@
 import { BasicColumn, FormSchema } from '/@/components/Table';
 import { h } from 'vue';
 import { Tag } from 'ant-design-vue';
+import { getCustomerList } from '/@/api/crm/customer';
+import { getOpportunityPage } from '/@/api/crm/opportunity';
 
 // 审核状态字典
 export const AUDIT_STATUS_MAP = {
@@ -14,6 +16,24 @@ const auditStatusOptions = Object.entries(AUDIT_STATUS_MAP).map(([value, { label
   label,
   value,
 }));
+
+async function getCustomerOptions() {
+  const pageResult = await getCustomerList({ current: 1, size: 200 });
+  const records = pageResult?.records || [];
+  return records.map((item) => ({
+    label: item.name,
+    value: String(item.id),
+  }));
+}
+
+async function getOpportunityOptions() {
+  const pageResult = await getOpportunityPage({ current: 1, size: 200 });
+  const records = pageResult?.records || [];
+  return records.map((item) => ({
+    label: item.name,
+    value: String(item.id),
+  }));
+}
 
 export const columns: BasicColumn[] = [
   {
@@ -84,14 +104,27 @@ export const formSchema: FormSchema[] = [
   },
   {
     field: 'customerId',
-    label: '客户ID',
-    component: 'Input',
+    label: '客户',
+    component: 'ApiSelect',
+    componentProps: {
+      api: getCustomerOptions,
+      showSearch: true,
+      optionFilterProp: 'label',
+      numberToString: true,
+    },
     required: true,
   },
   {
     field: 'opportunityId',
-    label: '关联商机ID',
-    component: 'Input',
+    label: '关联商机',
+    component: 'ApiSelect',
+    componentProps: {
+      api: getOpportunityOptions,
+      allowClear: true,
+      showSearch: true,
+      optionFilterProp: 'label',
+      numberToString: true,
+    },
   },
   {
     field: 'name',

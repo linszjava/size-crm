@@ -1,9 +1,12 @@
 package com.size.system.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.size.common.core.domain.Result;
 import com.size.system.domain.SysUser;
+import com.size.system.model.dto.UserSaveDTO;
+import com.size.system.model.vo.UserDetailVO;
 import com.size.system.service.ISysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +27,7 @@ public class SysUserController {
     /**
      * 获取用户列表
      */
+    @SaCheckPermission("system:user:query")
     @GetMapping("/page")
     public Result<Page<SysUser>> page(
             @RequestParam(defaultValue = "1") Integer current,
@@ -43,6 +47,7 @@ public class SysUserController {
     /**
      * 获取用户列表（不分页）
      */
+    @SaCheckPermission("system:user:query")
     @GetMapping("/list")
     public Result<List<SysUser>> list() {
         return Result.ok(userService.list());
@@ -51,35 +56,44 @@ public class SysUserController {
     /**
      * 根据用户编号获取详细信息
      */
+    @SaCheckPermission("system:user:query")
     @GetMapping("/{id}")
-    public Result<SysUser> getInfo(@PathVariable Long id) {
-        return Result.ok(userService.getById(id));
+    public Result<UserDetailVO> getInfo(@PathVariable Long id) {
+        return Result.ok(userService.getUserDetail(id));
     }
 
     /**
      * 新增用户
      */
+    @SaCheckPermission("system:user:add")
     @PostMapping
-    public Result<Boolean> add(@RequestBody SysUser user) {
-        if (user.getTenantId() == null) {
-            user.setTenantId(1L);
+    public Result<Boolean> add(@RequestBody UserSaveDTO dto) {
+        try {
+            return Result.ok(userService.saveUser(dto));
+        } catch (IllegalArgumentException e) {
+            return Result.fail(e.getMessage());
         }
-        return Result.ok(userService.save(user));
     }
 
     /**
      * 修改用户
      */
+    @SaCheckPermission("system:user:edit")
     @PutMapping
-    public Result<Boolean> edit(@RequestBody SysUser user) {
-        return Result.ok(userService.updateById(user));
+    public Result<Boolean> edit(@RequestBody UserSaveDTO dto) {
+        try {
+            return Result.ok(userService.updateUser(dto));
+        } catch (IllegalArgumentException e) {
+            return Result.fail(e.getMessage());
+        }
     }
 
     /**
      * 删除用户
      */
+    @SaCheckPermission("system:user:delete")
     @DeleteMapping("/{ids}")
     public Result<Boolean> remove(@PathVariable Long[] ids) {
-        return Result.ok(userService.removeByIds(Arrays.asList(ids)));
+        return Result.ok(userService.removeUsers(Arrays.asList(ids)));
     }
 }

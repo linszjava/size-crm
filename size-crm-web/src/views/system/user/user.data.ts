@@ -2,6 +2,60 @@ import { BasicColumn, FormSchema } from '/@/components/Table';
 import { getDeptList } from '/@/api/system/dept';
 import { getRoleList } from '/@/api/system/role';
 
+function buildDeptTree(flatList: Recordable[] = []): Recordable[] {
+  const nodeMap = new Map<string, Recordable>();
+  const roots: Recordable[] = [];
+
+  (flatList || []).forEach((item) => {
+    const key = String(item.id);
+    nodeMap.set(key, {
+      title: item.deptName,
+      value: String(item.id),
+      key,
+      orderNum: item.orderNum ?? 0,
+      children: [],
+    });
+  });
+
+  (flatList || []).forEach((item) => {
+    const current = nodeMap.get(String(item.id));
+    if (!current) return;
+    const parentId = item.parentId;
+    const parentKey = parentId === null || parentId === undefined ? '' : String(parentId);
+    if (!parentKey || parentKey === '0' || !nodeMap.has(parentKey)) {
+      roots.push(current);
+      return;
+    }
+    const parent = nodeMap.get(parentKey);
+    if (!parent) return;
+    (parent.children || []).push(current);
+  });
+
+  const sortNodes = (nodes: Recordable[]) => {
+    nodes.sort((a, b) => Number(a.orderNum || 0) - Number(b.orderNum || 0));
+    nodes.forEach((node) => {
+      if (node.children?.length) {
+        sortNodes(node.children);
+      }
+    });
+  };
+  sortNodes(roots);
+  return roots;
+}
+
+async function getDeptTreeOptions() {
+  const list = await getDeptList();
+  return buildDeptTree(list || []);
+}
+
+async function getRoleOptions() {
+  const list = await getRoleList();
+  return (list || []).map((item) => ({
+    label: item.roleName,
+    value: String(item.id),
+  }));
+}
+
 export const columns: BasicColumn[] = [
   {
     title: '用户账号',
@@ -84,12 +138,18 @@ export const formSchema: FormSchema[] = [
     label: '归属部门',
     component: 'ApiTreeSelect',
     componentProps: {
-      api: getDeptList,
-      fieldNames: {
-        label: 'deptName',
-        key: 'id',
-        value: 'id',
-      },
+      api: getDeptTreeOptions,
+      getPopupContainer: () => document.body,
+    },
+    required: true,
+  },
+  {
+    field: 'roleIds',
+    label: '角色',
+    component: 'ApiSelect',
+    componentProps: {
+      api: getRoleOptions,
+      mode: 'multiple',
       getPopupContainer: () => document.body,
     },
     required: true,

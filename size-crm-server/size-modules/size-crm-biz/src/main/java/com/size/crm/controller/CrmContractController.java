@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.size.common.core.domain.Result;
 import com.size.crm.domain.CrmContract;
 import com.size.crm.service.ICrmContractService;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import com.size.crm.feign.RemoteWorkflowService;
 
@@ -61,13 +63,55 @@ public class CrmContractController {
      */
     @PostMapping
     public Result<Boolean> add(@RequestBody CrmContract contract) {
-        if (contract.getTenantId() == null) {
-            contract.setTenantId(1L);
+        try {
+            if (contract.getTenantId() == null) {
+                contract.setTenantId(1L);
+            }
+            if (contract.getOwnerUserId() == null) {
+                contract.setOwnerUserId(10001L);
+            }
+            if (contract.getAuditStatus() == null || contract.getAuditStatus().isEmpty()) {
+                contract.setAuditStatus("DRAFT"); // 默认草稿状态
+            }
+            return Result.ok(contractService.save(contract));
+        } catch (DuplicateKeyException e) {
+            return Result.fail("合同编号已存在，请更换后重试");
         }
-        if (contract.getAuditStatus() == null || contract.getAuditStatus().isEmpty()) {
-            contract.setAuditStatus("DRAFT"); // 默认草稿状态
+    }
+
+    /**
+     * 保存草稿（允许前端先落库，后续补全信息）
+     */
+    @PostMapping("/draft")
+    public Result<Boolean> saveDraft(@RequestBody CrmContract contract) {
+        try {
+            if (contract.getTenantId() == null) {
+                contract.setTenantId(1L);
+            }
+            if (contract.getOwnerUserId() == null) {
+                contract.setOwnerUserId(10001L);
+            }
+            contract.setAuditStatus("DRAFT");
+            // 兼容数据库非空约束
+            if (contract.getCustomerId() == null) {
+                contract.setCustomerId(0L);
+            }
+            if (contract.getName() == null || contract.getName().isBlank()) {
+                contract.setName("草稿合同-" + System.currentTimeMillis());
+            }
+            if (contract.getContractNo() == null || contract.getContractNo().isBlank()) {
+                contract.setContractNo("DRAFT-" + System.currentTimeMillis());
+            }
+            if (contract.getSignDate() == null) {
+                contract.setSignDate(LocalDate.now());
+            }
+            if (contract.getTotalAmount() == null) {
+                contract.setTotalAmount(java.math.BigDecimal.ZERO);
+            }
+            return Result.ok(contractService.save(contract));
+        } catch (DuplicateKeyException e) {
+            return Result.fail("合同编号已存在，请更换后重试");
         }
-        return Result.ok(contractService.save(contract));
     }
 
     /**

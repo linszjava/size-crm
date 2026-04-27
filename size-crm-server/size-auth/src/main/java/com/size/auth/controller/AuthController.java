@@ -2,12 +2,13 @@ package com.size.auth.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.exception.NotLoginException;
+import com.size.api.domain.UserPermissionInfo;
+import com.size.api.domain.UserRegisterDTO;
 import com.size.common.core.domain.Result;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import cn.hutool.crypto.digest.BCrypt;
@@ -32,41 +33,67 @@ public class AuthController {
     public Result<?> login(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");
-        
-        System.out.println("====== LOGIN DEBUG ======");
-        System.out.println("Attempting login for: " + username);
 
         // 调用 system 模块接口查询数据库
         Result<LoginUser> userResult = null;
         try {
             userResult = remoteUserService.getUserInfo(username);
-            System.out.println("remoteUserService result: " + userResult);
         } catch (Exception e) {
-            e.printStackTrace();
             return Result.fail("远程调用异常: " + e.getMessage());
         }
 
         if (userResult == null || userResult.getCode() != 200 || userResult.getData() == null) {
-            System.out.println("Login Failed: userResult invalid");
             return Result.fail("用户名或密码错误");
         }
-        
+
         LoginUser loginUser = userResult.getData();
-        System.out.println("LoginUser retrieved: " + loginUser.getUsername());
-        System.out.println("Password from DB: " + loginUser.getPassword());
-        
+
+        if (loginUser.getStatus() != null && loginUser.getStatus() != 0) {
+            return Result.fail(403, "账号已停用，请联系管理员");
+        }
+
         // 校验密码
-        if (!BCrypt.checkpw(password, loginUser.getPassword())) {
-            System.out.println("Login Failed: BCrypt mismatch");
+        String storedPassword = loginUser.getPassword();
+        boolean passwordMatched = false;
+        if (storedPassword != null && !storedPassword.isBlank()) {
+            if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
+                passwordMatched = BCrypt.checkpw(password, storedPassword);
+            } else {
+                // 兼容历史明文密码；后续通过修改用户密码完成迁移
+                passwordMatched = storedPassword.equals(password);
+            }
+        }
+        if (!passwordMatched) {
             return Result.fail("用户名或密码错误");
         }
-        
+
+        // 角色被禁用或未分配有效角色时，禁止登录
+        if (loginUser.getRoles() == null || loginUser.getRoles().isEmpty()) {
+            return Result.fail(403, "账号无可用角色，请联系管理员");
+        }
+
         // 登录成功，颁发 token
         StpUtil.login(loginUser.getId());
         Map<String, String> tokenMap = new HashMap<>();
         tokenMap.put("token", StpUtil.getTokenValue());
-        System.out.println("Login Success! Token: " + StpUtil.getTokenValue());
         return Result.ok(tokenMap, "登录成功");
+    }
+
+    /**
+     * 注册接口
+     */
+    @PostMapping("/register")
+    public Result<?> register(@RequestBody UserRegisterDTO dto) {
+        Result<Boolean> registerResult;
+        try {
+            registerResult = remoteUserService.register(dto);
+        } catch (Exception e) {
+            return Result.fail("注册失败: " + e.getMessage());
+        }
+        if (registerResult == null || registerResult.getCode() != 200) {
+            return Result.fail(registerResult == null ? "注册失败" : registerResult.getMsg());
+        }
+        return Result.ok(true, "注册成功");
     }
 
     /**
@@ -76,14 +103,19 @@ public class AuthController {
     public Result<?> getUserInfo() {
         try {
             // 验证 token 是否有效，无效则抛出 NotLoginException
-            Object loginId = StpUtil.getLoginId();
+            Long loginId = StpUtil.getLoginIdAsLong();
+            Result<UserPermissionInfo> permissionResult = remoteUserService.getUserPermission(loginId);
+            if (permissionResult == null || permissionResult.getCode() != 200 || permissionResult.getData() == null) {
+                return Result.fail("获取用户信息失败");
+            }
+            UserPermissionInfo permissionInfo = permissionResult.getData();
             Map<String, Object> userInfo = new HashMap<>();
-            userInfo.put("userId", loginId);
-            userInfo.put("username", "admin");
-            userInfo.put("realName", "系统管理员");
-            userInfo.put("avatar", "https://q1.qlogo.cn/g?b=qq&nk=190848757&s=640");
+            userInfo.put("userId", permissionInfo.getUserId());
+            userInfo.put("username", permissionInfo.getUsername());
+            userInfo.put("realName", permissionInfo.getRealName());
+            userInfo.put("avatar", permissionInfo.getAvatar());
             userInfo.put("desc", "管理大师");
-            userInfo.put("roles", new String[]{"super"});
+            userInfo.put("roles", permissionInfo.getRoles());
             return Result.ok(userInfo);
         } catch (NotLoginException e) {
             return Result.fail(401, "Token 已失效，请重新登录");
@@ -95,7 +127,16 @@ public class AuthController {
      */
     @GetMapping("/getPermCode")
     public Result<?> getPermCode() {
-        return Result.ok(new String[]{"1000", "2000", "3000"});
+        try {
+            Long loginId = StpUtil.getLoginIdAsLong();
+            Result<UserPermissionInfo> permissionResult = remoteUserService.getUserPermission(loginId);
+            if (permissionResult == null || permissionResult.getCode() != 200 || permissionResult.getData() == null) {
+                return Result.ok(Collections.emptyList());
+            }
+            return Result.ok(permissionResult.getData().getPermCodes());
+        } catch (NotLoginException e) {
+            return Result.fail(401, "Token 已失效，请重新登录");
+        }
     }
 
     /**
@@ -103,45 +144,16 @@ public class AuthController {
      */
     @GetMapping("/getMenuList")
     public Result<?> getMenuList() {
-        // TODO: 从 sys_menu 表读取并构建树结构，此处为硬编码演示打通前端流程
-        List<Map<String, Object>> menus = new ArrayList<>();
-        
-        Map<String, Object> crmMenu = new HashMap<>();
-        crmMenu.put("path", "/crm");
-        crmMenu.put("name", "Crm");
-        crmMenu.put("component", "LAYOUT");
-        Map<String, Object> crmMeta = new HashMap<>();
-        crmMeta.put("title", "CRM系统");
-        crmMeta.put("icon", "ion:briefcase-outline");
-        crmMenu.put("meta", crmMeta);
-        
-        List<Map<String, Object>> children = new ArrayList<>();
-        
-        String[][] subMenus = {
-            {"customer", "客户管理"},
-            {"leads", "线索池"},
-            {"opportunity", "商机"},
-            {"contract", "合同管理"},
-            {"receivable", "回款管理"},
-            {"contact", "联系人"},
-            {"follow", "跟进记录"}
-        };
-        
-        for (String[] sub : subMenus) {
-            Map<String, Object> child = new HashMap<>();
-            child.put("path", sub[0]);
-            child.put("name", "Crm" + sub[0].substring(0, 1).toUpperCase() + sub[0].substring(1));
-            child.put("component", "/crm/" + sub[0] + "/index");
-            Map<String, Object> childMeta = new HashMap<>();
-            childMeta.put("title", sub[1]);
-            child.put("meta", childMeta);
-            children.add(child);
+        try {
+            Long loginId = StpUtil.getLoginIdAsLong();
+            Result<UserPermissionInfo> permissionResult = remoteUserService.getUserPermission(loginId);
+            if (permissionResult == null || permissionResult.getCode() != 200 || permissionResult.getData() == null) {
+                return Result.ok(Collections.emptyList());
+            }
+            return Result.ok(permissionResult.getData().getMenuRouteTree());
+        } catch (NotLoginException e) {
+            return Result.fail(401, "Token 已失效，请重新登录");
         }
-        
-        crmMenu.put("children", children);
-        menus.add(crmMenu);
-        
-        return Result.ok(menus);
     }
 
     /**
