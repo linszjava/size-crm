@@ -4,6 +4,10 @@ export default {
     // user dropdown
     dropdownItemDoc: 'Document',
     dropdownItemLoginOut: 'Login Out',
+    switchUser: 'Switch account',
+    switchUserTip: 'Switch account',
+    switchUserMessage:
+      'You will be signed out and redirected to the login page to sign in as another user.',
 
     tooltipErrorLog: 'Error log',
     tooltipLock: 'Lock screen',

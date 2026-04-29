@@ -52,15 +52,14 @@ public class AuthController {
             return Result.fail(403, "账号已停用，请联系管理员");
         }
 
-        // 校验密码
+        // 密码校验统一使用 BCrypt.checkpw（存库须为 BCrypt.hashpw 生成的哈希，见 system 用户保存/注册）
         String storedPassword = loginUser.getPassword();
         boolean passwordMatched = false;
-        if (storedPassword != null && !storedPassword.isBlank()) {
-            if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
+        if (password != null && storedPassword != null && !storedPassword.isBlank()) {
+            try {
                 passwordMatched = BCrypt.checkpw(password, storedPassword);
-            } else {
-                // 兼容历史明文密码；后续通过修改用户密码完成迁移
-                passwordMatched = storedPassword.equals(password);
+            } catch (Exception e) {
+                passwordMatched = false;
             }
         }
         if (!passwordMatched) {

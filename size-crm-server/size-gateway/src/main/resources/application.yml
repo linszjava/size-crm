@@ -25,9 +25,9 @@ spring:
           predicates:
             - Path=/auth/**
         
-        # 系统模块路由
-        - id: size-system
-          uri: lb://size-system
+        # 系统模块路由（size-crm-system）
+        - id: size-crm-system
+          uri: lb://size-crm-system
           predicates:
             - Path=/system/**
             
@@ -37,8 +37,8 @@ spring:
           predicates:
             - Path=/crm/**
 
-        # 工作流模块路由
-        - id: size-workflow
-          uri: lb://size-workflow
+        # 工作流模块路由（size-crm-workflow）
+        - id: size-crm-workflow
+          uri: lb://size-crm-workflow
           predicates:
             - Path=/workflow/**

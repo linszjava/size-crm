@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 /**
  * 远程用户服务
  */
-@FeignClient(contextId = "remoteUserService", value = "size-system")
+@FeignClient(contextId = "remoteUserService", value = "size-crm-system")
 public interface RemoteUserService {
 
     /**

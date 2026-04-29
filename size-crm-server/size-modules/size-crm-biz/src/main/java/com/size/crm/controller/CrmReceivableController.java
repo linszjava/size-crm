@@ -83,7 +83,7 @@ public class CrmReceivableController {
         CrmReceivable receivable = receivableService.getById(id);
         if (receivable != null && ("DRAFT".equals(receivable.getAuditStatus()) || "REJECTED".equals(receivable.getAuditStatus()))) {
             receivable.setAuditStatus("AUDITING");
-            // TODO: 调用 size-workflow 模块启动流程，并获取 processInstanceId 填充到这里
+            // TODO: 调用 size-crm-workflow 模块启动流程，并获取 processInstanceId 填充到这里
             return Result.ok(receivableService.updateById(receivable));
         }
         return Result.fail("只有草稿或已驳回状态的回款才能提交审批");

@@ -161,6 +161,22 @@ export const useUserStore = defineStore({
     },
 
     /**
+     * @description: 切换用户：确认后退出并进入登录页，便于使用其他账号登录
+     */
+    confirmSwitchUser() {
+      const { createConfirm } = useMessage();
+      const { t } = useI18n();
+      createConfirm({
+        iconType: 'warning',
+        title: () => h('span', t('layout.header.switchUserTip')),
+        content: () => h('span', t('layout.header.switchUserMessage')),
+        onOk: async () => {
+          await this.logout(true);
+        },
+      });
+    },
+
+    /**
      * @description: Confirm before logging out
      */
     confirmLoginOut() {
