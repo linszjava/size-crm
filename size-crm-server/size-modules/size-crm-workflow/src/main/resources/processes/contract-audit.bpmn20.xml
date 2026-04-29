@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="http://www.camunda.org/processdef">
+  <process id="contract-audit" name="合同审批流程" isExecutable="true" camunda:historyTimeToLive="P180D">
+    <!-- 开始节点 -->
+    <startEvent id="startEvent" name="开始审批" camunda:initiator="initiator"/>
+    <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="salesManagerAudit"/>
+    <!-- 节点1：销售总监审批（候选 ROLE_SALES_MANAGER，同角色抢先办理） -->
+    <userTask id="salesManagerAudit" name="销售总监审批" camunda:candidateGroups="ROLE_SALES_MANAGER">
+      <documentation>候选组 ROLE_SALES_MANAGER。具有该角色的用户均可办理同一待办；任意一人先通过或驳回（可附备注）后流程即流转，其他人该待办自动消失。</documentation>
+    </userTask>
+    <sequenceFlow id="flow2" sourceRef="salesManagerAudit" targetRef="financeAudit">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow_reject1" sourceRef="salesManagerAudit" targetRef="endEventReject">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == false}]]></conditionExpression>
+    </sequenceFlow>
+    <!-- 节点2：财务专员审批（候选 ROLE_FINANCE，与销售总监相同机制） -->
+    <userTask id="financeAudit" name="财务专员审批" camunda:candidateGroups="ROLE_FINANCE">
+      <documentation>候选组 ROLE_FINANCE。具有该角色的用户均可办理同一待办；任意一人先通过或驳回（可附备注）后流程即结束，其他人该待办自动消失。</documentation>
+    </userTask>
+    <sequenceFlow id="flow3" sourceRef="financeAudit" targetRef="endEventPass">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow_reject2" sourceRef="financeAudit" targetRef="endEventReject">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == false}]]></conditionExpression>
+    </sequenceFlow>
+    <!-- 结束节点 (通过) -->
+    <endEvent id="endEventPass" name="审批通过"/>
+    <!-- 结束节点 (驳回) -->
+    <endEvent id="endEventReject" name="审批驳回"/>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_contract_audit">
+    <bpmndi:BPMNPlane id="BPMNPlane_contract_audit" bpmnElement="contract-audit">
+      <bpmndi:BPMNShape id="shape_startEvent" bpmnElement="startEvent">
+        <omgdc:Bounds x="120" y="180" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_salesManagerAudit" bpmnElement="salesManagerAudit">
+        <omgdc:Bounds x="240" y="158" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_financeAudit" bpmnElement="financeAudit">
+        <omgdc:Bounds x="440" y="158" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_endEventPass" bpmnElement="endEventPass">
+        <omgdc:Bounds x="660" y="180" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_endEventReject" bpmnElement="endEventReject">
+        <omgdc:Bounds x="440" y="320" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_flow1" bpmnElement="flow1">
+        <omgdi:waypoint x="156" y="198"/>
+        <omgdi:waypoint x="240" y="198"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow2" bpmnElement="flow2">
+        <omgdi:waypoint x="360" y="198"/>
+        <omgdi:waypoint x="440" y="198"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow3" bpmnElement="flow3">
+        <omgdi:waypoint x="560" y="198"/>
+        <omgdi:waypoint x="660" y="198"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_reject1" bpmnElement="flow_reject1">
+        <omgdi:waypoint x="300" y="238"/>
+        <omgdi:waypoint x="300.0" y="339.57312"/>
+        <omgdi:waypoint x="440.00003" y="339.57312"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_flow_reject2" bpmnElement="flow_reject2">
+        <omgdi:waypoint x="500" y="238"/>
+        <omgdi:waypoint x="500" y="320"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

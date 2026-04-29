@@ -52,3 +52,7 @@ lerna-debug.log*
 *.swo
 *.tmp
 
+
+.gitignore
+.cursor
+

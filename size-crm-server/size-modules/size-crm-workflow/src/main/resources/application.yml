@@ -1,0 +1,42 @@
+server:
+  port: 9503
+
+spring:
+  application:
+    name: size-crm-workflow
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        import-check:
+          enabled: false
+  # 仅连接 Camunda 引擎库 ACT_*；业务与系统数据走 Feign 调 size-crm-biz / size-crm-system
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/size_crm_workflow?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true
+    username: root
+    password: linsz99@
+    hikari:
+      # Camunda ENGINE-12019：引擎要求 READ_COMMITTED，MySQL 连接默认常为 REPEATABLE_READ
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+
+camunda:
+  bpm:
+    # 仅 BPMN 流程时可关闭 CMMN，避免 Case 引擎对 ACT_* 的额外迁移（与库内旧/半套表结构冲突时出现 ENGINE-03017）
+    cmmn:
+      enabled: false
+    # Camunda 7.20+ ENGINE-12018：未声明 TTL 的流程无法部署；此处为全局默认（ISO-8601 时长），模型内 camunda:historyTimeToLive 优先
+    generic-properties:
+      properties:
+        historyTimeToLive: P180D
+    database:
+      schema-update: true
+    deployment-resource-pattern: classpath*:/processes/*.bpmn,classpath*:/processes/*.bpmn20.xml
+    job-execution:
+      enabled: false
+    admin-user:
+      id: demo
+      password: demo
