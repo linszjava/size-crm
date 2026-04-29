@@ -30,8 +30,14 @@ async function postWithFallback<T>(path: string, data?: any) {
   }
 }
 
-export const getMyTasks = (params?: any) =>
-  getWithFallback<any[]>('/myTasks', params);
+export const getMyTasks = (params?: { userId?: string; roleKeys?: string[] }) => {
+  const { userId, roleKeys } = params || {};
+  const query: Recordable = { userId };
+  if (roleKeys?.length) {
+    query.roleKeysCsv = roleKeys.join(',');
+  }
+  return getWithFallback<any[]>('/myTasks', query);
+};
 
 export const completeTask = (params: any) =>
   postWithFallback<boolean>('/complete', params);

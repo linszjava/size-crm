@@ -1,4 +1,6 @@
 import { BasicColumn, FormSchema } from '/@/components/Table';
+import { h } from 'vue';
+import { Space, Tag } from 'ant-design-vue';
 import { getDeptList } from '/@/api/system/dept';
 import { getRoleList } from '/@/api/system/role';
 
@@ -66,6 +68,26 @@ export const columns: BasicColumn[] = [
     title: '用户昵称',
     dataIndex: 'nickname',
     width: 120,
+  },
+  {
+    title: '角色',
+    dataIndex: 'roleNames',
+    width: 240,
+    align: 'left',
+    customRender: ({ record }) => {
+      const names = (record.roleNames || []) as string[];
+      if (!names.length) {
+        return h('span', { class: 'text-gray-400' }, '—');
+      }
+      return h(
+        Space,
+        { size: [4, 4], wrap: true, class: 'py-1' },
+        () =>
+          names.map((name, idx) =>
+            h(Tag, { color: 'blue', key: `${name}-${idx}` }, () => name),
+          ),
+      );
+    },
   },
   {
     title: '部门ID', // TODO: should be mapped to Dept Name in real app

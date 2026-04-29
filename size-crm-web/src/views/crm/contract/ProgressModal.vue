@@ -22,7 +22,7 @@
           <div v-else class="mb-1 text-sm text-gray-400">
             审批人: 等待签收/处理
           </div>
-          <div class="mb-1 text-sm text-gray-500">
+          <div v-if="item.createTime" class="mb-1 text-sm text-gray-500">
             创建时间: {{ formatToDateTime(item.createTime) }}
           </div>
           <div v-if="item.endTime" class="mb-1 text-sm text-gray-500">

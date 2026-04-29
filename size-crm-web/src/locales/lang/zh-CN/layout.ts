@@ -4,6 +4,9 @@ export default {
     // user dropdown
     dropdownItemDoc: '文档',
     dropdownItemLoginOut: '退出系统',
+    switchUser: '切换用户',
+    switchUserTip: '切换用户',
+    switchUserMessage: '将退出当前账号并进入登录页，请使用其他账号登录。',
 
     // tooltip
     tooltipErrorLog: '错误日志',

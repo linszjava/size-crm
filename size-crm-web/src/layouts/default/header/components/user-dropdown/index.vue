@@ -17,12 +17,17 @@
           icon="ion:document-text-outline"
           v-if="getShowDoc"
         />
-        <MenuDivider v-if="getShowDoc" />
         <MenuItem
           v-if="getUseLockPage"
           key="lock"
           :text="t('layout.header.tooltipLock')"
           icon="ion:lock-closed-outline"
+        />
+        <MenuDivider v-if="getShowDoc || getUseLockPage" />
+        <MenuItem
+          key="switchUser"
+          :text="t('layout.header.switchUser')"
+          icon="ion:swap-horizontal-outline"
         />
         <MenuItem
           key="logout"
@@ -54,7 +59,7 @@
 
   import { createAsyncComponent } from '/@/utils/factory/createAsyncComponent';
 
-  type MenuEvent = 'logout' | 'doc' | 'lock';
+  type MenuEvent = 'logout' | 'doc' | 'lock' | 'switchUser';
 
   export default defineComponent({
     name: 'UserDropdown',
@@ -99,6 +104,9 @@
         switch (e.key) {
           case 'logout':
             handleLoginOut();
+            break;
+          case 'switchUser':
+            userStore.confirmSwitchUser();
             break;
           case 'doc':
             openDoc();

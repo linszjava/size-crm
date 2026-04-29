@@ -130,7 +130,7 @@ public class CrmContractController {
         CrmContract contract = contractService.getById(id);
         if (contract != null && ("DRAFT".equals(contract.getAuditStatus()) || "REJECTED".equals(contract.getAuditStatus()))) {
             contract.setAuditStatus("AUDITING");
-            // 调用 size-workflow 模块启动流程
+            // 调用 size-crm-workflow 模块启动流程
             // 假设发起人是 contract.getOwnerUserId()，如果为空则默认 10001
             String initiatorId = contract.getOwnerUserId() != null ? contract.getOwnerUserId().toString() : "10001";
             Result<String> wfResult = remoteWorkflowService.startProcess("contract-audit", "contract:" + id, initiatorId);

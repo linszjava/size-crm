@@ -13,26 +13,41 @@
               label: '通过',
               icon: 'ant-design:check-outlined',
               color: 'success',
-              popConfirm: {
-                title: '是否确认审批通过？',
-                placement: 'left',
-                confirm: handleComplete.bind(null, record, true),
-              },
+              onClick: () => openAuditModal(record, true),
             },
             {
               label: '驳回',
               icon: 'ant-design:close-outlined',
               color: 'error',
-              popConfirm: {
-                title: '是否确认驳回？',
-                placement: 'left',
-                confirm: handleComplete.bind(null, record, false),
-              },
+              onClick: () => openAuditModal(record, false),
             },
           ]"
         />
       </template>
     </BasicTable>
+
+    <a-modal
+      v-model:visible="auditModalVisible"
+      :title="auditApproved ? '审批通过' : '审批驳回'"
+      :confirm-loading="auditSubmitting"
+      ok-text="提交"
+      cancel-text="取消"
+      destroy-on-close
+      @ok="submitAuditFromModal"
+    >
+      <a-form layout="vertical" class="pt-2">
+        <a-form-item label="审批备注">
+          <a-textarea
+            v-model:value="auditComment"
+            :rows="4"
+            placeholder="选填：审批意见、补充说明等，将记入流程意见。"
+            :maxlength="500"
+            show-count
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
     <a-drawer
       v-model:visible="detailVisible"
       title="审批详情"
@@ -125,7 +140,7 @@
   import { getMyTasks, completeTask, getProcessProgress } from '/@/api/workflow/task';
   import { columns } from './task.data';
   import { useMessage } from '/@/hooks/web/useMessage';
-  import { Drawer, Descriptions, Card, Alert, Timeline, Empty, Spin } from 'ant-design-vue';
+  import { Drawer, Descriptions, Card, Alert, Timeline, Empty, Spin, Modal, Form, Input } from 'ant-design-vue';
   import { useUserStoreWithOut } from '/@/store/modules/user';
 
   export default defineComponent({
@@ -133,6 +148,10 @@
     components: {
       BasicTable,
       TableAction,
+      AModal: Modal,
+      AForm: Form,
+      AFormItem: Form.Item,
+      ATextarea: Input.TextArea,
       ADrawer: Drawer,
       ADescriptions: Descriptions,
       ADescriptionsItem: Descriptions.Item,
@@ -153,6 +172,12 @@
       const showDataMissingHint = computed(
         () => currentRecord.value?.bizSummary === '未查询到业务详情',
       );
+
+      const auditModalVisible = ref(false);
+      const auditSubmitting = ref(false);
+      const auditRecord = ref<Recordable | null>(null);
+      const auditApproved = ref(true);
+      const auditComment = ref('');
 
       const [registerTable, { reload }] = useTable({
         title: '我的待办任务',
@@ -178,17 +203,41 @@
         },
       });
 
-      async function handleComplete(record: Recordable, approved: boolean) {
+      function openAuditModal(record: Recordable, approved: boolean) {
+        auditRecord.value = record;
+        auditApproved.value = approved;
+        auditComment.value = '';
+        auditModalVisible.value = true;
+      }
+
+      async function submitAuditFromModal() {
+        const record = auditRecord.value;
+        if (!record) return;
+        const userId = String(userStore.getUserInfo?.userId || '');
+        const roleKeys = (userStore.getRoleList || []).map((r) => String(r));
+        if (!userId) {
+          createMessage.error('无法获取当前用户，请重新登录');
+          return;
+        }
+        auditSubmitting.value = true;
         try {
+          const trimmed = (auditComment.value || '').trim();
+          const comment = trimmed || (auditApproved.value ? '同意' : '驳回');
           await completeTask({
             taskId: record.taskId,
-            approved: approved,
-            comment: approved ? '同意' : '驳回',
+            approved: auditApproved.value,
+            comment,
+            userId,
+            roleKeys,
           });
-          createMessage.success(approved ? '审批通过成功' : '驳回成功');
-          reload();
+          createMessage.success(auditApproved.value ? '审批通过成功' : '驳回成功');
+          auditModalVisible.value = false;
+          await reload();
         } catch (e: any) {
           createMessage.error(e?.message || '审批失败，请稍后重试');
+          throw e;
+        } finally {
+          auditSubmitting.value = false;
         }
       }
 
@@ -216,7 +265,12 @@
 
       return {
         registerTable,
-        handleComplete,
+        openAuditModal,
+        submitAuditFromModal,
+        auditModalVisible,
+        auditApproved,
+        auditComment,
+        auditSubmitting,
         handleView,
         detailVisible,
         currentRecord,

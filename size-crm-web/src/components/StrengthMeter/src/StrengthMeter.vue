@@ -33,7 +33,7 @@
       showInput: propTypes.bool.def(true),
       disabled: propTypes.bool,
     },
-    emits: ['score-change', 'change'],
+    emits: ['score-change', 'change', 'update:value'],
     setup(props, { emit }) {
       const innerValueRef = ref('');
       const { prefixCls } = useDesign('strength-meter');
@@ -59,6 +59,7 @@
         () => unref(innerValueRef),
         (val) => {
           emit('change', val);
+          emit('update:value', val);
         },
       );
 

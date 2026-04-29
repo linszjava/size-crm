@@ -15,8 +15,8 @@
     <description>SIZE Management System - Business Modules</description>
 
     <modules>
-        <module>size-system</module>
+        <module>size-crm-system</module>
         <module>size-crm-biz</module>
-        <module>size-workflow</module>
+        <module>size-crm-workflow</module>
     </modules>
 </project>
