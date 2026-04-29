@@ -6,10 +6,10 @@ It is used to start the test interface service, which can test the upload, webso
 
 ```bash
 
-cd ./test/server
+cd ./tests/server
 
-yarn
+npm install
 
-yarn start
+npm start
 
 ```

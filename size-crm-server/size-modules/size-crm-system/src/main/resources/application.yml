@@ -1,13 +1,14 @@
 server:
-  port: 9504
+  port: 9502
 
 spring:
   application:
-    name: size-crm-biz
+    name: size-crm-system
   cloud:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+        ip: 127.0.0.1
       config:
         server-addr: 127.0.0.1:8848
         file-extension: yaml
@@ -15,8 +16,8 @@ spring:
           enabled: false
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # CRM 库 crm_*；DDL 见 docs/sql/size_crm.sql（sys_* 在 size_crm_system）
-    url: jdbc:mysql://127.0.0.1:3306/size_crm?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    # 系统库：sys_* 等；DDL 见 docs/sql/size_crm_system.sql（与 size_crm、size_crm_workflow 分离）
+    url: jdbc:mysql://127.0.0.1:3306/size_crm_system?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true
     username: root
     password: linsz99@
 

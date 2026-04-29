@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0eu87ej" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.46.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:process id="test" name="测试合同执行器" isExecutable="true" camunda:versionTag="1" camunda:historyTimeToLive="P180D">
+    <bpmn:startEvent id="StartEvent" name="开始事件" camunda:initiator="initiator">
+      <bpmn:outgoing>Flow_1o0hwyn</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="endEventPass" name="审批通过">
+      <bpmn:incoming>Flow_0kakij4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1o0hwyn" sourceRef="StartEvent" targetRef="SaleManagerAudit" />
+    <bpmn:sequenceFlow id="Flow_04vw5gd" sourceRef="SaleManagerAudit" targetRef="FinaceManagerAudit">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression"><![CDATA[${approved == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0kakij4" sourceRef="FinaceManagerAudit" targetRef="endEventPass">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression"><![CDATA[${approved == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="SaleManagerAudit" name="销售总监" camunda:candidateGroups="ROLE_SALES_MANAGER">
+      <bpmn:incoming>Flow_1o0hwyn</bpmn:incoming>
+      <bpmn:outgoing>Flow_04vw5gd</bpmn:outgoing>
+      <bpmn:outgoing>Flow_19bertz</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="FinaceManagerAudit" name="财务专员" camunda:candidateGroups="ROLE_FINANCE">
+      <bpmn:incoming>Flow_04vw5gd</bpmn:incoming>
+      <bpmn:outgoing>Flow_0kakij4</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1sxcjsp</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="endEventReject" name="审批驳回">
+      <bpmn:incoming>Flow_19bertz</bpmn:incoming>
+      <bpmn:incoming>Flow_1sxcjsp</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_19bertz" sourceRef="SaleManagerAudit" targetRef="endEventReject">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression"><![CDATA[${approved == false}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1sxcjsp" sourceRef="FinaceManagerAudit" targetRef="endEventReject">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression"><![CDATA[${approved == false}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1aqsxqu">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent">
+        <dc:Bounds x="182" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="145" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0blnjb7_di" bpmnElement="endEventPass">
+        <dc:Bounds x="622" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="618" y="145" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0mfkce1_di" bpmnElement="SaleManagerAudit">
+        <dc:Bounds x="270" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1hl2rde_di" bpmnElement="FinaceManagerAudit">
+        <dc:Bounds x="440" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0ydj3r6_di" bpmnElement="endEventReject">
+        <dc:Bounds x="362" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="359" y="285" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1o0hwyn_di" bpmnElement="Flow_1o0hwyn">
+        <di:waypoint x="218" y="120" />
+        <di:waypoint x="270" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0kakij4_di" bpmnElement="Flow_0kakij4">
+        <di:waypoint x="540" y="120" />
+        <di:waypoint x="622" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04vw5gd_di" bpmnElement="Flow_04vw5gd">
+        <di:waypoint x="370" y="120" />
+        <di:waypoint x="440" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19bertz_di" bpmnElement="Flow_19bertz">
+        <di:waypoint x="320" y="160" />
+        <di:waypoint x="320" y="201" />
+        <di:waypoint x="380" y="201" />
+        <di:waypoint x="380" y="242" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1sxcjsp_di" bpmnElement="Flow_1sxcjsp">
+        <di:waypoint x="490" y="160" />
+        <di:waypoint x="490" y="260" />
+        <di:waypoint x="398" y="260" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
