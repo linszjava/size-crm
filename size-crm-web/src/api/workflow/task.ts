@@ -39,8 +39,16 @@ export const getMyTasks = (params?: { userId?: string; roleKeys?: string[] }) =>
   return getWithFallback<any[]>('/myTasks', query);
 };
 
-export const completeTask = (params: any) =>
-  postWithFallback<boolean>('/complete', params);
+export interface TaskCompletePayload {
+  taskId: string;
+  approved: boolean;
+  comment?: string;
+  userId: string;
+  roleKeys?: string[];
+}
+
+export const completeTask = (data: TaskCompletePayload) =>
+  postWithFallback<boolean>('/complete', data);
 
 export const getProcessProgress = (businessKey: string) =>
   getWithFallback<any[]>(`/progress/${businessKey}`);
